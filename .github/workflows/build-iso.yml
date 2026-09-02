@@ -22,10 +22,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install live-build toolchain
+      - name: Install toolchain
         run: |
           sudo apt-get update
           sudo apt-get install -y live-build xorriso debootstrap
+          # gh is preinstalled on GitHub-hosted runners, but install it
+          # explicitly if absent so the workflow is resilient to image changes.
+          if ! command -v gh >/dev/null 2>&1; then
+            sudo mkdir -p -m 755 /etc/apt/keyrings
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+              | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null
+            sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+              | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            sudo apt-get update
+            sudo apt-get install -y gh
+          fi
 
       - name: Build ISO
         env:
@@ -35,10 +47,11 @@ jobs:
           # back to GITHUB_TOKEN, which only works if those repos are readable
           # by this workflow's token.
           GH_TOKEN: ${{ secrets.DAYGLEVE_ARTIFACTS_TOKEN || secrets.GITHUB_TOKEN }}
-          # The dispatch input is passed as an env var (never interpolated into
-          # the script), then validated below. Empty on tag builds, where
-          # versions.env's pinned default is used instead.
-          DAYGLEVE_VERSION: ${{ inputs.version }}
+          # Version to assemble: an explicit dispatch input wins; otherwise on a
+          # tag build use the pushed tag itself (so the ISO always matches the
+          # tag it's attached to); otherwise empty -> versions.env's pin. Passed
+          # as an env var (never interpolated into the script), validated below.
+          DAYGLEVE_VERSION: ${{ inputs.version || (github.ref_type == 'tag' && github.ref_name) || '' }}
         run: |
           if [ -n "$DAYGLEVE_VERSION" ]; then
             case "$DAYGLEVE_VERSION" in

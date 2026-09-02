@@ -8,8 +8,8 @@ binary/
 *.img
 *.log
 
-# Fetched release artifacts staged into the image (populated by build.sh)
+# Fetched release artifacts staged into the image (populated by build.sh).
+# fetch-artifacts.sh creates the web root at build time, so it is not tracked.
 config/includes.chroot/usr/bin/daygleve-backend
-config/includes.chroot/usr/share/daygleve/web/*
-!config/includes.chroot/usr/share/daygleve/web/.gitkeep
+config/includes.chroot/usr/share/daygleve/web/
 artifacts/

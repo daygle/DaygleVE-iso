@@ -12,6 +12,13 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck disable=SC1091
 source "$ROOT/versions.env"
 
+# Preflight: fail with a clear message rather than a generic "command not
+# found" partway through, which could leave a half-populated include tree.
+if ! command -v gh >/dev/null 2>&1; then
+  echo "!! the GitHub CLI (gh) is required but not installed" >&2
+  exit 1
+fi
+
 INCLUDE="$ROOT/config/includes.chroot"
 BIN_DEST="$INCLUDE/usr/bin/daygleve-backend"
 WEB_DEST="$INCLUDE/usr/share/daygleve/web"
@@ -46,7 +53,8 @@ gh release download "$DAYGLEVE_VERSION" \
   --pattern "$FRONTEND_ASSET" \
   --dir "$STAGE"
 # Recreate the web root from scratch so nothing from a previous build (dotfiles
-# such as the tracked .gitkeep included) is baked into the image.
+# included) is baked into the image. The directory is untracked and created
+# here on demand.
 rm -rf "${WEB_DEST:?}"
 mkdir -p "$WEB_DEST"
 tar -xzf "$STAGE/$FRONTEND_ASSET" -C "$WEB_DEST"
