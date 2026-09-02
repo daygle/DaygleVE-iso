@@ -6,6 +6,15 @@
 # sync with versions.env.
 set -e
 
+# Single source of truth for the pinned suite/arch/version. When invoked via
+# build.sh these are already exported; sourcing versions.env here keeps a bare
+# `lb config` correct too, so this file can't drift from the pins.
+CONFIG_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [ -f "$CONFIG_ROOT/versions.env" ]; then
+  # shellcheck disable=SC1091
+  . "$CONFIG_ROOT/versions.env"
+fi
+
 : "${DEBIAN_SUITE:=trixie}"
 : "${ARCH:=amd64}"
 
