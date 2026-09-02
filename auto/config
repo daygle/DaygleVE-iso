@@ -22,16 +22,21 @@ fi
 # an Ubuntu host (e.g. the GitHub runner) auto-detects "ubuntu" mode and tries
 # to fetch the Debian suite (trixie) from Ubuntu mirrors, which fails with
 # "Failed getting release file .../ubuntu/dists/trixie/Release".
+#
+# --security false: the Ubuntu-packaged live-build derives the Debian security
+# suite in the old "<suite>/updates" form (e.g. trixie/updates), which 404s on
+# Debian 13 where it is "trixie-security". Disabling the security pocket lets
+# the build resolve; main + trixie-updates still provide everything. Re-enable
+# with a corrected security suite in a later hardening pass.
 lb config noauto \
   --mode debian \
   --distribution "${DEBIAN_SUITE}" \
   --architectures "${ARCH}" \
   --archive-areas "main contrib non-free-firmware" \
+  --security false \
   --mirror-bootstrap "http://deb.debian.org/debian/" \
   --mirror-chroot "http://deb.debian.org/debian/" \
-  --mirror-chroot-security "http://security.debian.org/debian-security/" \
   --mirror-binary "http://deb.debian.org/debian/" \
-  --mirror-binary-security "http://security.debian.org/debian-security/" \
   --debian-installer none \
   --firmware-chroot true \
   --memtest none \
