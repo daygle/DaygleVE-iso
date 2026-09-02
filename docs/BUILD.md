@@ -1,0 +1,72 @@
+# DaygleVE release & ISO build runbook
+
+DaygleVE ships as a single ISO assembled from tagged releases of the three app
+repos. Because everything is pinned to immutable tags, a given
+`DAYGLEVE_VERSION` reproduces the same image.
+
+## Cutting a release (the coordinated tag dance)
+
+Tags must be cut **in order**, because backend/frontend consume the schema by
+tag and the ISO consumes backend/frontend by tag.
+
+1. **Schema** — tag `DaygleVE-schema` at the release, e.g.:
+   ```sh
+   git -C DaygleVE-schema tag v1.0.0 && git -C DaygleVE-schema push origin v1.0.0
+   ```
+   Its `Release` workflow verifies the crate and publishes the TS bindings.
+
+2. **Repoint app pins to the schema tag** (once per major/minor, not every build):
+   - Backend `Cargo.toml`: `daygleve-schema = { git = "…", tag = "v1.0.0" }`
+   - Frontend `package.json`: `"@daygleve/schema": "github:daygle/DaygleVE-schema#v1.0.0"`
+   Commit these, then continue.
+
+3. **Backend** — tag `DaygleVE-backend` `v1.0.0` and push. Its `Release`
+   workflow builds `daygleve-backend-v1.0.0-x86_64-unknown-linux-gnu.tar.gz`.
+
+4. **Frontend** — tag `DaygleVE-frontend` `v1.0.0` and push. Its `Release`
+   workflow builds `daygleve-frontend-v1.0.0.tar.gz` (the static site).
+
+5. **ISO** — set `DAYGLEVE_VERSION="v1.0.0"` in `versions.env`, commit, then
+   tag this repo `v1.0.0` and push (or run the **Build ISO** workflow with the
+   version input). The workflow fetches the backend + frontend assets and
+   builds the ISO.
+
+## Required secret
+
+The ISO build downloads release assets from the **backend** and **frontend**
+repos. In this repo's Actions secrets set:
+
+- `DAYGLEVE_ARTIFACTS_TOKEN` — a fine-grained PAT (or GitHub App token) with
+  **Contents: read** on `DaygleVE-backend` and `DaygleVE-frontend`.
+
+If those repos are readable by the default `GITHUB_TOKEN` in your org, the
+workflow falls back to it and no secret is needed.
+
+## Building locally
+
+```sh
+sudo apt-get install -y live-build xorriso debootstrap gh
+export GH_TOKEN=<token as above>
+./build.sh          # -> daygleve-v1.0.0-amd64.iso
+```
+
+`build.sh` re-execs under `sudo` because live-build debootstraps and mounts a
+chroot. The build runs entirely on the host (no KVM needed); booting the
+resulting ISO does need virtualization.
+
+## Reproducibility notes
+
+- Component bits are pinned by tag (immutable). For bit-for-bit Rust builds,
+  also commit `Cargo.lock` in the backend and build the release with
+  `--locked` (a follow-up once the schema pin moves from a branch to a tag).
+- The Debian suite is pinned in `versions.env` (`DEBIAN_SUITE`). Debian's
+  archive still moves within a suite; add `--apt-options`/snapshot pinning in
+  `auto/config` if you need archive-level reproducibility.
+
+## Status
+
+This is the initial, structurally-complete pipeline. The image build must run
+on a privileged Linux runner (the CI workflow provides one); ZFS is built via
+DKMS against the shipped kernel. Expect to iterate on the package set, the
+installer story (this is a live image; a guided disk installer is a natural
+next step), and hardening (drop the backend from root to scoped capabilities).

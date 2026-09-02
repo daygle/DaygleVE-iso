@@ -1,0 +1,2 @@
+The frontend static build is unpacked into this directory by build.sh
+(fetch-artifacts) at image-build time. It is intentionally empty in git.
