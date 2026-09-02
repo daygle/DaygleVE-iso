@@ -1,0 +1,15 @@
+# live-build working + output directories
+.build/
+cache/
+chroot/
+chroot.packages.*
+binary/
+*.iso
+*.img
+*.log
+
+# Fetched release artifacts staged into the image (populated by build.sh).
+# fetch-artifacts.sh creates the web root at build time, so it is not tracked.
+config/includes.chroot/usr/bin/daygleve-backend
+config/includes.chroot/usr/share/daygleve/web/
+artifacts/

@@ -1,0 +1,19 @@
+[Unit]
+Description=DaygleVE hypervisor control API and web UI
+Documentation=https://github.com/daygle/DaygleVE-backend
+After=network-online.target libvirtd.service
+Wants=network-online.target
+
+[Service]
+Type=exec
+EnvironmentFile=/etc/daygleve/daygleve.env
+ExecStart=/usr/bin/daygleve-backend
+Restart=on-failure
+RestartSec=2
+# The backend drives KVM/QEMU, ZFS, LXC and host networking, so it runs
+# privileged. Tighten with dedicated capabilities once the host integration
+# lands (see the backend service-layer TODOs).
+User=root
+
+[Install]
+WantedBy=multi-user.target

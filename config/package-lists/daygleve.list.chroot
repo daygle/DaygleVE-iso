@@ -1,0 +1,41 @@
+# Packages installed into the DaygleVE live image (chroot stage).
+# One package per line; comments allowed.
+
+# --- Base / boot ---
+linux-image-amd64
+linux-headers-amd64
+systemd-sysv
+firmware-linux-free
+live-boot
+live-config
+live-config-systemd
+
+# --- Virtualization: KVM/QEMU + libvirt ---
+qemu-system-x86
+qemu-utils
+libvirt-daemon-system
+libvirt-clients
+ovmf
+
+# --- Containers: LXC ---
+lxc
+lxcfs
+
+# --- Storage: ZFS (built via DKMS against the installed kernel) ---
+zfsutils-linux
+zfs-dkms
+zfs-zed
+
+# --- Networking ---
+bridge-utils
+iproute2
+ifupdown2
+vlan
+
+# --- Base utilities / management ---
+openssh-server
+ca-certificates
+curl
+gnupg
+sudo
+chrony

@@ -1,0 +1,21 @@
+#!/bin/sh
+# Runs inside the image chroot during `lb build`: enable the services that
+# make the box a DaygleVE node on first boot.
+set -e
+
+# The DaygleVE control plane (API + web UI).
+systemctl enable daygleve-backend.service
+
+# Virtualization / container / storage daemons.
+systemctl enable libvirtd.service || true
+systemctl enable lxc.service || true
+systemctl enable zfs-import-cache.service || true
+systemctl enable zfs-mount.service || true
+systemctl enable zfs-zed.service || true
+systemctl enable ssh.service || true
+
+# Ensure the backend binary is executable (permissions can be lost via
+# includes.chroot copying).
+if [ -f /usr/bin/daygleve-backend ]; then
+  chmod 0755 /usr/bin/daygleve-backend
+fi

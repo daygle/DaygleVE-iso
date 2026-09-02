@@ -1,0 +1,32 @@
+#!/bin/sh
+# live-build configuration for the DaygleVE appliance ISO.
+#
+# `lb config` reads this via `auto/config`. Values here define a Debian live
+# image that boots straight into the DaygleVE stack. Keep the suite/arch in
+# sync with versions.env.
+set -e
+
+# Single source of truth for the pinned suite/arch/version. When invoked via
+# build.sh these are already exported; sourcing versions.env here keeps a bare
+# `lb config` correct too, so this file can't drift from the pins.
+CONFIG_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [ -f "$CONFIG_ROOT/versions.env" ]; then
+  # shellcheck disable=SC1091
+  . "$CONFIG_ROOT/versions.env"
+fi
+
+: "${DEBIAN_SUITE:=trixie}"
+: "${ARCH:=amd64}"
+
+lb config noauto \
+  --distribution "${DEBIAN_SUITE}" \
+  --architectures "${ARCH}" \
+  --archive-areas "main contrib non-free-firmware" \
+  --debian-installer none \
+  --firmware-chroot true \
+  --memtest none \
+  --iso-application "DaygleVE" \
+  --iso-publisher "DaygleVE" \
+  --iso-volume "DaygleVE ${DAYGLEVE_VERSION:-dev}" \
+  --bootappend-live "boot=live components quiet splash" \
+  "${@}"

@@ -1,0 +1,76 @@
+name: Build ISO
+
+on:
+  # Cut an ISO by tagging this repo (e.g. v1.0.0), which should match the
+  # DAYGLEVE_VERSION pinned in versions.env.
+  push:
+    tags: ["v*"]
+  # Or build on demand for a chosen version.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "DaygleVE release tag to assemble (overrides versions.env)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y live-build xorriso debootstrap curl ca-certificates
+          # gh is preinstalled on GitHub-hosted runners, but install it
+          # explicitly if absent so the workflow is resilient to image changes.
+          if ! command -v gh >/dev/null 2>&1; then
+            sudo mkdir -p -m 755 /etc/apt/keyrings
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+              | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null
+            sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+              | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            sudo apt-get update
+            sudo apt-get install -y gh
+          fi
+
+      - name: Build ISO
+        env:
+          # Needs read access to the backend + frontend release assets. Set a
+          # repo/org secret DAYGLEVE_ARTIFACTS_TOKEN (fine-grained PAT with
+          # Contents:read on DaygleVE-backend and DaygleVE-frontend). Falls
+          # back to GITHUB_TOKEN, which only works if those repos are readable
+          # by this workflow's token.
+          GH_TOKEN: ${{ secrets.DAYGLEVE_ARTIFACTS_TOKEN || secrets.GITHUB_TOKEN }}
+          # Version to assemble: an explicit dispatch input wins; otherwise on a
+          # tag build use the pushed tag itself (so the ISO always matches the
+          # tag it's attached to); otherwise empty -> versions.env's pin. Passed
+          # as an env var (never interpolated into the script), validated below.
+          DAYGLEVE_VERSION: ${{ inputs.version || (github.ref_type == 'tag' && github.ref_name) || '' }}
+        run: |
+          if [ -n "$DAYGLEVE_VERSION" ]; then
+            case "$DAYGLEVE_VERSION" in
+              v[0-9]*) ;;
+              *) echo "Invalid version input: '$DAYGLEVE_VERSION' (expected a v* tag)" >&2; exit 1 ;;
+            esac
+          fi
+          sudo --preserve-env=GH_TOKEN,DAYGLEVE_VERSION ./build.sh
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: daygleve-iso
+          path: "*.iso"
+          if-no-files-found: error
+
+      - name: Attach ISO to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "*.iso"
+          generate_release_notes: true
