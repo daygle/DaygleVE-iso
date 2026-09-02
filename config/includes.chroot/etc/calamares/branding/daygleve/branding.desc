@@ -1,0 +1,41 @@
+---
+# DaygleVE branding for the Calamares installer.
+#
+# calamares-settings-debian ships a "debian" branding component and points
+# /etc/calamares/settings.conf at it. The chroot hook repoints that to this
+# component (branding: daygleve), so the installer shows DaygleVE's name,
+# logo and colors instead of Debian's.
+componentName: daygleve
+
+# Center the window; let Calamares pick a sensible default size.
+welcomeStyleCalamares: true
+welcomeExpandingLogo: true
+windowExpanding: normal
+windowPlacement: center
+
+strings:
+    productName:         "DaygleVE"
+    shortProductName:    "DaygleVE"
+    version:             "1.0.0"
+    shortVersion:        "1.0"
+    versionedName:       "DaygleVE 1.0.0"
+    shortVersionedName:  "DaygleVE 1.0"
+    bootloaderEntryName:  "DaygleVE"
+    productUrl:          "https://github.com/daygle"
+    supportUrl:          "https://github.com/daygle/DaygleVE-backend/issues"
+    knownIssuesUrl:      "https://github.com/daygle/DaygleVE-backend/issues"
+    releaseNotesUrl:     "https://github.com/daygle"
+
+images:
+    # A transparent, colorful mark so it reads on either a light or dark
+    # welcome page; the product name is drawn by Calamares from the strings
+    # above, so the logo intentionally carries no wordmark.
+    productLogo:         "mark.svg"
+    productIcon:         "icon.svg"
+
+# DaygleVE palette (matches the logomark / web UI).
+style:
+    sidebarBackground:    "#0f172a"
+    sidebarText:          "#e6edf3"
+    sidebarTextSelect:    "#22d3ee"
+    sidebarTextCurrent:   "#22d3ee"

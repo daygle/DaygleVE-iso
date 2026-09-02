@@ -77,3 +77,23 @@ flow itself is validated by booting the ISO. Remaining hardening: drop the
 backend from root to scoped capabilities, trim installer packages from the
 target, and re-enable the Debian security suite with the correct
 `trixie-security` name.
+
+## Branding
+
+DaygleVE branding replaces Debian's defaults on two surfaces:
+
+- **Boot menu** — `config/bootloaders/isolinux/splash.svg` (BIOS/syslinux) and
+  `config/bootloaders/grub-pc/splash.png` (UEFI/grub) replace the stock Debian
+  splash (the one that showed the Debian logo, "Debian GNU/Linux 13" and
+  live-build version numbers). A pre-rendered `splash.png` sits beside the
+  `.svg` so the branding survives even if the runner cannot rasterize SVG;
+  `librsvg2-bin` is installed in CI so live-build can regenerate it.
+- **Installer** — `config/includes.chroot/etc/calamares/branding/daygleve/`
+  is a Calamares branding component (`branding.desc` + `mark.svg`/`icon.svg`).
+  The chroot hook repoints `/etc/calamares/settings.conf`
+  (`branding: debian` → `branding: daygleve`) so the installer shows the
+  DaygleVE name, logo and palette, and names the installed bootloader entry
+  "DaygleVE".
+
+The menu entry labels (e.g. "Live system (amd64)") still come from live-build's
+stock templates; relabeling them is a follow-up.

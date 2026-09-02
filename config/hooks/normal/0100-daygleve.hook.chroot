@@ -25,6 +25,18 @@ if [ -f /etc/sudoers.d/daygleve-installer ]; then
   chmod 0440 /etc/sudoers.d/daygleve-installer
 fi
 
+# Point Calamares at the DaygleVE branding component. calamares-settings-debian
+# ships settings.conf with `branding: debian`; repoint it to the DaygleVE
+# component installed at /etc/calamares/branding/daygleve so the installer
+# shows DaygleVE's name, logo and colors.
+if [ -f /etc/calamares/settings.conf ]; then
+  if grep -q '^branding:' /etc/calamares/settings.conf; then
+    sed -i 's/^branding:.*/branding: daygleve/' /etc/calamares/settings.conf
+  else
+    echo 'branding: daygleve' >> /etc/calamares/settings.conf
+  fi
+fi
+
 # The live user (created by live-config, auto-logged-in on tty1) runs startx
 # from /etc/skel/.bash_profile, which launches openbox + the Calamares
 # installer. The default systemd target stays multi-user (no display manager);

@@ -27,7 +27,11 @@ jobs:
           sudo apt-get update
           # debian-archive-keyring lets debootstrap verify Debian's Release
           # signature when building a Debian image from an Ubuntu runner.
-          sudo apt-get install -y xorriso debootstrap curl ca-certificates debian-archive-keyring squashfs-tools
+          # librsvg2-bin (rsvg-convert) lets live-build rasterize the branded
+          # boot splash.svg into the splash.png syslinux/grub use as the menu
+          # background. A pre-rendered splash.png is also committed as a
+          # fallback, so branding survives even if conversion is skipped.
+          sudo apt-get install -y xorriso debootstrap curl ca-certificates debian-archive-keyring squashfs-tools librsvg2-bin
           # Install a CURRENT live-build from Debian. The Ubuntu-packaged one is
           # too old for the modern Debian archive: it fetches the obsolete
           # top-level dists/<suite>/Contents-<arch>.gz (removed; now per
