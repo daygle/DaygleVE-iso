@@ -18,10 +18,20 @@ fi
 : "${DEBIAN_SUITE:=trixie}"
 : "${ARCH:=amd64}"
 
+# Force Debian mode with explicit Debian mirrors. Without this, live-build on
+# an Ubuntu host (e.g. the GitHub runner) auto-detects "ubuntu" mode and tries
+# to fetch the Debian suite (trixie) from Ubuntu mirrors, which fails with
+# "Failed getting release file .../ubuntu/dists/trixie/Release".
 lb config noauto \
+  --mode debian \
   --distribution "${DEBIAN_SUITE}" \
   --architectures "${ARCH}" \
   --archive-areas "main contrib non-free-firmware" \
+  --mirror-bootstrap "http://deb.debian.org/debian/" \
+  --mirror-chroot "http://deb.debian.org/debian/" \
+  --mirror-chroot-security "http://security.debian.org/debian-security/" \
+  --mirror-binary "http://deb.debian.org/debian/" \
+  --mirror-binary-security "http://security.debian.org/debian-security/" \
   --debian-installer none \
   --firmware-chroot true \
   --memtest none \

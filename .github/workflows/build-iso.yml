@@ -25,7 +25,9 @@ jobs:
       - name: Install toolchain
         run: |
           sudo apt-get update
-          sudo apt-get install -y live-build xorriso debootstrap curl ca-certificates
+          # debian-archive-keyring lets debootstrap verify Debian's Release
+          # signature when building a Debian image from an Ubuntu runner.
+          sudo apt-get install -y live-build xorriso debootstrap curl ca-certificates debian-archive-keyring
           # gh is preinstalled on GitHub-hosted runners, but install it
           # explicitly if absent so the workflow is resilient to image changes.
           if ! command -v gh >/dev/null 2>&1; then
