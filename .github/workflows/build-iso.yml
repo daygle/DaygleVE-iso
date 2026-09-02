@@ -27,7 +27,19 @@ jobs:
           sudo apt-get update
           # debian-archive-keyring lets debootstrap verify Debian's Release
           # signature when building a Debian image from an Ubuntu runner.
-          sudo apt-get install -y live-build xorriso debootstrap curl ca-certificates debian-archive-keyring
+          sudo apt-get install -y xorriso debootstrap curl ca-certificates debian-archive-keyring squashfs-tools
+          # Install a CURRENT live-build from Debian. The Ubuntu-packaged one is
+          # too old for the modern Debian archive: it fetches the obsolete
+          # top-level dists/<suite>/Contents-<arch>.gz (removed; now per
+          # component), so lb_chroot_linux-image 404s. Pull the latest
+          # live-build .deb from Debian's pool and install it (it is
+          # Architecture: all — pure shell/make — so it runs fine on Ubuntu).
+          LB_DEB=$(curl -fsSL https://deb.debian.org/debian/pool/main/l/live-build/ \
+            | grep -oE 'live-build_[^"<]+_all\.deb' | sort -V | tail -1)
+          test -n "$LB_DEB"
+          echo "Installing Debian live-build: $LB_DEB"
+          curl -fsSL -o /tmp/live-build.deb "https://deb.debian.org/debian/pool/main/l/live-build/${LB_DEB}"
+          sudo apt-get install -y /tmp/live-build.deb
           # gh is preinstalled on GitHub-hosted runners, but install it
           # explicitly if absent so the workflow is resilient to image changes.
           if ! command -v gh >/dev/null 2>&1; then
