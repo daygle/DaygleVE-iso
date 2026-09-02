@@ -19,3 +19,14 @@ systemctl enable ssh.service || true
 if [ -f /usr/bin/daygleve-backend ]; then
   chmod 0755 /usr/bin/daygleve-backend
 fi
+
+# sudoers drop-ins must be mode 0440, or sudo refuses to read them.
+if [ -f /etc/sudoers.d/daygleve-installer ]; then
+  chmod 0440 /etc/sudoers.d/daygleve-installer
+fi
+
+# The live user (created by live-config, auto-logged-in on tty1) runs startx
+# from /etc/skel/.bash_profile, which launches openbox + the Calamares
+# installer. The default systemd target stays multi-user (no display manager);
+# the installed hypervisor is headless, and calamares-settings-debian removes
+# calamares/xorg from the target during install.

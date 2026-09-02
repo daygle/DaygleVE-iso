@@ -1,0 +1,4 @@
+# Allow the live user to launch the graphical installer as root without a
+# password, preserving the X display so the GUI can render.
+Defaults env_keep += "DISPLAY XAUTHORITY"
+user ALL=(root) NOPASSWD: /usr/bin/calamares

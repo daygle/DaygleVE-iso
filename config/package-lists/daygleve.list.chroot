@@ -39,3 +39,13 @@ curl
 gnupg
 sudo
 chrony
+
+# --- Graphical installer (Calamares) + a minimal X session to display it ---
+# The live image boots into a lightweight X session that auto-launches the
+# Calamares installer; calamares-settings-debian configures it to install the
+# live DaygleVE system to disk. `xorg` pulls the X server + all video/input
+# drivers so it just works on real hardware and in VMs.
+xorg
+openbox
+calamares
+calamares-settings-debian
