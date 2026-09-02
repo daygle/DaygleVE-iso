@@ -27,10 +27,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y live-build xorriso debootstrap
 
-      - name: Override pinned version (workflow_dispatch)
-        if: ${{ inputs.version != '' }}
-        run: sed -i "s/^DAYGLEVE_VERSION=.*/DAYGLEVE_VERSION=\"${{ inputs.version }}\"/" versions.env
-
       - name: Build ISO
         env:
           # Needs read access to the backend + frontend release assets. Set a
@@ -39,7 +35,18 @@ jobs:
           # back to GITHUB_TOKEN, which only works if those repos are readable
           # by this workflow's token.
           GH_TOKEN: ${{ secrets.DAYGLEVE_ARTIFACTS_TOKEN || secrets.GITHUB_TOKEN }}
-        run: sudo --preserve-env=GH_TOKEN ./build.sh
+          # The dispatch input is passed as an env var (never interpolated into
+          # the script), then validated below. Empty on tag builds, where
+          # versions.env's pinned default is used instead.
+          DAYGLEVE_VERSION: ${{ inputs.version }}
+        run: |
+          if [ -n "$DAYGLEVE_VERSION" ]; then
+            case "$DAYGLEVE_VERSION" in
+              v[0-9]*) ;;
+              *) echo "Invalid version input: '$DAYGLEVE_VERSION' (expected a v* tag)" >&2; exit 1 ;;
+            esac
+          fi
+          sudo --preserve-env=GH_TOKEN,DAYGLEVE_VERSION ./build.sh
 
       - name: Upload ISO artifact
         uses: actions/upload-artifact@v4

@@ -31,11 +31,17 @@ lb clean --purge
 lb config
 lb build
 
-# 3. Name the output deterministically.
+# 3. Name the output deterministically, failing fast if live-build produced no
+#    ISO (or renamed it) so CI never "succeeds" with no artifact.
 OUT="daygleve-${DAYGLEVE_VERSION}-${ARCH}.iso"
-if [ -f live-image-amd64.hybrid.iso ]; then
-  mv -f live-image-amd64.hybrid.iso "$OUT"
-elif [ -f "live-image-${ARCH}.hybrid.iso" ]; then
+if [ -f "live-image-${ARCH}.hybrid.iso" ]; then
   mv -f "live-image-${ARCH}.hybrid.iso" "$OUT"
+elif [ -f live-image-amd64.hybrid.iso ]; then
+  mv -f live-image-amd64.hybrid.iso "$OUT"
+else
+  echo "!! expected live-build ISO not found (looked for live-image-${ARCH}.hybrid.iso)" >&2
+  echo "   ISOs present:" >&2
+  ls -1 ./*.iso 2>/dev/null >&2 || echo "   (none)" >&2
+  exit 1
 fi
 echo "== built: ${OUT} =="

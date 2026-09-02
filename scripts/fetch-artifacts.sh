@@ -18,17 +18,24 @@ WEB_DEST="$INCLUDE/usr/share/daygleve/web"
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 
+# Exact asset names for this version, matching the backend/frontend release
+# workflows. Pinning the full name (not a wildcard) guarantees exactly one
+# asset is selected, so the build is deterministic and never trips over a
+# stray same-prefixed asset.
+BACKEND_ASSET="daygleve-backend-${DAYGLEVE_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
+FRONTEND_ASSET="daygleve-frontend-${DAYGLEVE_VERSION}.tar.gz"
+
 echo ">> DaygleVE ${DAYGLEVE_VERSION}"
-echo ">> backend:  ${BACKEND_REPO}"
-echo ">> frontend: ${FRONTEND_REPO}"
+echo ">> backend:  ${BACKEND_REPO} (${BACKEND_ASSET})"
+echo ">> frontend: ${FRONTEND_REPO} (${FRONTEND_ASSET})"
 
 # --- backend binary -------------------------------------------------------
 echo ">> fetching backend binary…"
 gh release download "$DAYGLEVE_VERSION" \
   --repo "$BACKEND_REPO" \
-  --pattern 'daygleve-backend-*-x86_64-unknown-linux-gnu.tar.gz' \
+  --pattern "$BACKEND_ASSET" \
   --dir "$STAGE"
-tar -xzf "$STAGE"/daygleve-backend-*.tar.gz -C "$STAGE"
+tar -xzf "$STAGE/$BACKEND_ASSET" -C "$STAGE"
 install -Dm0755 "$STAGE/daygleve-backend" "$BIN_DEST"
 echo "   -> $BIN_DEST"
 
@@ -36,11 +43,13 @@ echo "   -> $BIN_DEST"
 echo ">> fetching frontend site…"
 gh release download "$DAYGLEVE_VERSION" \
   --repo "$FRONTEND_REPO" \
-  --pattern 'daygleve-frontend-*.tar.gz' \
+  --pattern "$FRONTEND_ASSET" \
   --dir "$STAGE"
-rm -rf "${WEB_DEST:?}/"* 2>/dev/null || true
+# Recreate the web root from scratch so nothing from a previous build (dotfiles
+# such as the tracked .gitkeep included) is baked into the image.
+rm -rf "${WEB_DEST:?}"
 mkdir -p "$WEB_DEST"
-tar -xzf "$STAGE"/daygleve-frontend-*.tar.gz -C "$WEB_DEST"
+tar -xzf "$STAGE/$FRONTEND_ASSET" -C "$WEB_DEST"
 echo "   -> $WEB_DEST"
 
 echo ">> artifacts staged."
