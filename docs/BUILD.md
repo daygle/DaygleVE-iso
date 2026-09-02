@@ -31,16 +31,19 @@ tag and the ISO consumes backend/frontend by tag.
    version input). The workflow fetches the backend + frontend assets and
    builds the ISO.
 
-## Required secret
+## Credentials
 
 The ISO build downloads release assets from the **backend** and **frontend**
-repos. In this repo's Actions secrets set:
+repos. Those repos are **public**, so the workflow's built-in `GITHUB_TOKEN`
+can read their releases and **no secret is required**.
+
+Only if you later make the app repos **private** do you need to set a secret:
 
 - `DAYGLEVE_ARTIFACTS_TOKEN` — a fine-grained PAT (or GitHub App token) with
   **Contents: read** on `DaygleVE-backend` and `DaygleVE-frontend`.
 
-If those repos are readable by the default `GITHUB_TOKEN` in your org, the
-workflow falls back to it and no secret is needed.
+The workflow uses that secret when present and otherwise falls back to
+`GITHUB_TOKEN`.
 
 ## Building locally
 

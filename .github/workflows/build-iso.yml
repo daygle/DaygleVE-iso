@@ -41,11 +41,11 @@ jobs:
 
       - name: Build ISO
         env:
-          # Needs read access to the backend + frontend release assets. Set a
-          # repo/org secret DAYGLEVE_ARTIFACTS_TOKEN (fine-grained PAT with
-          # Contents:read on DaygleVE-backend and DaygleVE-frontend). Falls
-          # back to GITHUB_TOKEN, which only works if those repos are readable
-          # by this workflow's token.
+          # Token used to download the backend + frontend release assets. The
+          # app repos are public, so the built-in GITHUB_TOKEN reads their
+          # releases fine and no secret is required. Only set the optional
+          # DAYGLEVE_ARTIFACTS_TOKEN secret (a PAT with Contents:read) if you
+          # later make those repos private.
           GH_TOKEN: ${{ secrets.DAYGLEVE_ARTIFACTS_TOKEN || secrets.GITHUB_TOKEN }}
           # Version to assemble: an explicit dispatch input wins; otherwise on a
           # tag build use the pushed tag itself (so the ISO always matches the
