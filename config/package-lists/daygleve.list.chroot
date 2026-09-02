@@ -10,6 +10,17 @@ live-boot
 live-config
 live-config-systemd
 
+# --- Bootloader (baked into the image so the installer needs no network) ---
+# Without these, Calamares tries to download grub at install time and fails on
+# an offline machine ("Temporary failure resolving deb.debian.org", then
+# update-grub not found). Include signed EFI grub + shim for UEFI/Secure Boot
+# and grub-pc for legacy BIOS, plus efibootmgr to write EFI boot entries.
+grub-efi-amd64-signed
+shim-signed
+grub-pc-bin
+efibootmgr
+os-prober
+
 # --- Virtualization: KVM/QEMU + libvirt ---
 qemu-system-x86
 qemu-utils
