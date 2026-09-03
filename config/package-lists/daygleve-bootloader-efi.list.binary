@@ -1,0 +1,5 @@
+# UEFI GRUB packages copied into the ISO package pool.
+# The Debian Calamares helper installs the generic grub-efi package locally.
+grub-efi
+grub-efi-amd64
+grub-efi-amd64-unsigned

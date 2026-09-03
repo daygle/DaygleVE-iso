@@ -1,0 +1,3 @@
+# BIOS GRUB packages copied into the ISO package pool.
+# The Debian Calamares helper uses grub-pc when booted in legacy BIOS mode.
+grub-pc

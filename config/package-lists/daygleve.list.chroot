@@ -10,11 +10,10 @@ live-boot
 live-config
 live-config-systemd
 
-# --- Bootloader (baked into the image so the installer needs no network) ---
-# Without these, Calamares tries to download grub at install time and fails on
-# an offline machine ("Temporary failure resolving deb.debian.org", then
-# update-grub not found). Include signed EFI grub + shim for UEFI/Secure Boot
-# and grub-pc for legacy BIOS, plus efibootmgr to write EFI boot entries.
+# --- Bootloader support for the live image ---
+# The generic and unsigned GRUB packages used by Calamares are also staged in
+# the daygleve-bootloader-*.list.binary files so they are available from the
+# ISO package pool.
 grub-efi-amd64-signed
 shim-signed
 grub-pc-bin
