@@ -15,6 +15,10 @@ systemctl enable zfs-mount.service || true
 systemctl enable zfs-zed.service || true
 systemctl enable ssh.service || true
 
+# Entropy daemon: keep the kernel pool full in the live environment so Calamares
+# never blocks generating the machine-id / entropy seed on a low-entropy VM.
+systemctl enable haveged.service || true
+
 # Ensure the backend binary is executable (permissions can be lost via
 # includes.chroot copying).
 if [ -f /usr/bin/daygleve-backend ]; then
@@ -41,6 +45,27 @@ if [ -f /etc/calamares/settings.conf ]; then
     echo 'branding: daygleve' >> /etc/calamares/settings.conf
   fi
 fi
+
+# Stop Calamares from copying the host entropy pool into the target. On a
+# headless/low-entropy VM this "Generate machine-id" / createEntropy step can
+# block and freeze the installer partway through. The installed system seeds its
+# own entropy on first boot, so skipping the copy is safe. We write our own
+# machineid.conf (after packages are installed) so it wins over the one shipped
+# by calamares-settings-debian, keeping systemd + dbus machine-id generation but
+# disabling the entropy copy.
+mkdir -p /etc/calamares/modules
+cat > /etc/calamares/modules/machineid.conf <<'EOF'
+---
+# Generate /etc/machine-id via systemd-machine-id-setup.
+systemd: true
+# Generate /var/lib/dbus/machine-id and symlink it to /etc/machine-id.
+dbus: true
+dbus-symlink: true
+# Do NOT copy the host entropy seed into the target: this can block the
+# installer on a low-entropy VM. The installed system seeds itself on first boot.
+entropy-copy: false
+entropy: false
+EOF
 
 # The live user (created by live-config) runs the graphical installer through
 # daygleve-live-session.service on tty1. The default systemd target stays

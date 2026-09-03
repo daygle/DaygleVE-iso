@@ -49,6 +49,9 @@ curl
 gnupg
 sudo
 chrony
+# haveged keeps the kernel entropy pool full in headless VMs so the installer
+# never blocks generating machine-id / SSH host keys on a low-entropy system.
+haveged
 
 # --- Graphical installer (Calamares) + a minimal X session to display it ---
 # The live image boots into a lightweight X session that auto-launches the
