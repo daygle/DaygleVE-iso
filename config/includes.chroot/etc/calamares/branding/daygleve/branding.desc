@@ -7,8 +7,11 @@
 # logo and colors instead of Debian's.
 componentName: daygleve
 
+# Use the traditional "Welcome to the %1 installer." heading (DaygleVE in
+# place of %1) instead of the Calamares-branded wording.
+welcomeStyleCalamares: false
+
 # Center the window; let Calamares pick a sensible default size.
-welcomeStyleCalamares: true
 welcomeExpandingLogo: true
 windowExpanding: normal
 windowPlacement: center
@@ -47,7 +50,7 @@ images:
 
 # DaygleVE palette (matches the logomark / web UI).
 style:
-    sidebarBackground:    "#0f172a"
-    sidebarText:          "#e6edf3"
-    sidebarTextSelect:    "#22d3ee"
-    sidebarTextCurrent:   "#22d3ee"
+    SidebarBackground:       "#0f172a"
+    SidebarText:              "#e6edf3"
+    SidebarBackgroundCurrent: "#22d3ee"
+    SidebarTextCurrent:       "#0f172a"

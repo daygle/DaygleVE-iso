@@ -56,7 +56,7 @@ Presentation {
                 width: parent.width * 0.7
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.WordWrap
-                text: "A fast, modern single-node virtualization platform — KVM/QEMU, LXC, and ZFS from one clean control panel."
+                text: "A fast, modern single-node virtualization platform - KVM/QEMU, LXC, and ZFS from one clean control panel."
                 color: "#94a3b8"
                 font.pixelSize: 18
             }
@@ -72,7 +72,7 @@ Presentation {
                 width: parent.width * 0.72
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.WordWrap
-                text: "Run virtual machines and containers side by side.\n\nZFS-backed storage, bridged and VLAN networking, and GPU passthrough — configured for you during install."
+                text: "Run virtual machines and containers side by side.\n\nZFS-backed storage, bridged and VLAN networking, and GPU passthrough - configured for you during install."
                 color: "#e6edf3"
                 font.pixelSize: 22
             }
