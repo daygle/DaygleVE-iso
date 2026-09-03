@@ -1,0 +1,28 @@
+#!/bin/sh
+set -u
+
+# live-config creates the auto-login account during boot, so wait for it before
+# dropping privileges. This avoids making systemd resolve User=user too early.
+while ! id user >/dev/null 2>&1 || [ ! -f /home/user/.xinitrc ]; do
+  sleep 1
+done
+
+USER_UID="$(id -u user)"
+install -d -m 0700 -o user -g user "/run/user/$USER_UID"
+chmod 0755 /home/user/.xinitrc
+
+while :; do
+  runuser --user user -- env \
+    HOME=/home/user \
+    USER=user \
+    LOGNAME=user \
+    DISPLAY=:0 \
+    XDG_SESSION_TYPE=x11 \
+    XDG_RUNTIME_DIR="/run/user/$USER_UID" \
+    XAUTHORITY=/home/user/.Xauthority \
+    /usr/bin/startx /home/user/.xinitrc -- :0 vt1 -nolisten tcp
+  status=$?
+  [ "$status" -eq 0 ] && exit 0
+  echo "DaygleVE graphical session exited with status $status; retrying" >&2
+  sleep 2
+done

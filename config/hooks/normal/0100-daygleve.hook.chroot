@@ -5,6 +5,7 @@ set -e
 
 # The DaygleVE control plane (API + web UI).
 systemctl enable daygleve-backend.service
+systemctl enable daygleve-live-session.service
 
 # Virtualization / container / storage daemons.
 systemctl enable libvirtd.service || true
@@ -25,10 +26,9 @@ if [ -f /etc/sudoers.d/daygleve-installer ]; then
   chmod 0440 /etc/sudoers.d/daygleve-installer
 fi
 
-# xinit executes the user's .xinitrc as a program. Keep both the launcher and
-# the session script executable after live-build copies /etc/skel into the live
-# user's home directory.
-chmod 0755 /etc/skel/.bash_profile /etc/skel/.profile /etc/skel/.xinitrc
+# Keep the live-session launcher and xinit script executable after live-build
+# copies the files into the live user's home directory.
+chmod 0755 /usr/local/sbin/daygleve-live-session /etc/skel/.xinitrc
 
 # Point Calamares at the DaygleVE branding component. calamares-settings-debian
 # ships settings.conf with `branding: debian`; repoint it to the DaygleVE
@@ -42,8 +42,7 @@ if [ -f /etc/calamares/settings.conf ]; then
   fi
 fi
 
-# The live user (created by live-config, auto-logged-in on tty1) runs startx
-# from /etc/skel/.bash_profile, which launches openbox + the Calamares
-# installer. The default systemd target stays multi-user (no display manager);
-# the installed hypervisor is headless, and calamares-settings-debian removes
-# calamares/xorg from the target during install.
+# The live user (created by live-config) runs the graphical installer through
+# daygleve-live-session.service on tty1. The default systemd target stays
+# multi-user (no display manager); the installed hypervisor is headless, and
+# calamares-settings-debian removes calamares/xorg from the target during install.

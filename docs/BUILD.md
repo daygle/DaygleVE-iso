@@ -70,9 +70,9 @@ resulting ISO does need virtualization.
 
 The image build runs on a privileged Linux runner (the CI workflow provides
 one); ZFS is built via DKMS against the shipped kernel. The live image boots
-into the **Calamares** graphical installer (a minimal openbox/X session
-auto-launches it), which installs the DaygleVE system to disk via
-calamares-settings-debian. CI only verifies the image builds - the installer
+into the **Calamares** graphical installer (a live-only systemd service
+launches a minimal openbox/X session), which installs the DaygleVE system to disk
+via calamares-settings-debian. CI only verifies the image builds - the installer
 flow itself is validated by booting the ISO. Remaining hardening: drop the
 backend from root to scoped capabilities, trim installer packages from the
 target, and re-enable the Debian security suite with the correct

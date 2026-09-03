@@ -1,0 +1,26 @@
+[Unit]
+Description=DaygleVE graphical live installer session
+Documentation=https://github.com/daygle/DaygleVE-iso
+After=systemd-user-sessions.service
+Before=getty.target getty@tty1.service
+Conflicts=getty@tty1.service
+ConditionKernelCommandLine=boot=live
+ConditionPathExists=/usr/bin/startx
+
+[Service]
+Type=simple
+Environment=DISPLAY=:0
+Environment=XDG_SESSION_TYPE=x11
+ExecStart=/usr/local/sbin/daygleve-live-session
+Restart=on-failure
+RestartSec=2
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+StandardInput=tty
+StandardOutput=tty
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
