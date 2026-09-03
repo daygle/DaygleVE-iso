@@ -13,3 +13,6 @@ binary/
 config/includes.chroot/usr/bin/daygleve-backend
 config/includes.chroot/usr/share/daygleve/web/
 artifacts/
+
+# Freebuff workspace metadata.
+.freebuff/

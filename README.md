@@ -1,10 +1,10 @@
 # DaygleVE-iso
 
-Builds the **DaygleVE appliance ISO** — a bootable Debian live image that runs
+Builds the **DaygleVE appliance ISO** - a bootable Debian live image that runs
 the [DaygleVE](https://github.com/daygle) single-node virtualization platform
 (KVM/QEMU + LXC + ZFS + Linux networking) out of the box.
 
-This repository is **build tooling only** — it assembles release artifacts from
+This repository is **build tooling only** - it assembles release artifacts from
 the app repos; it contains no application source. That keeps the three app
 repos (`schema`, `backend`, `frontend`) clean and independent.
 
@@ -30,7 +30,7 @@ per release (see [`docs/BUILD.md`](docs/BUILD.md)).
 ## Building
 
 ```sh
-# needs: live-build, xorriso, debootstrap, gh (GitHub CLI), and root
+# needs: live-build, xorriso, debootstrap, gh, librsvg2-bin, and root
 export GH_TOKEN=<token with read access to the backend + frontend repos>
 ./build.sh
 # -> daygleve-<version>-amd64.iso

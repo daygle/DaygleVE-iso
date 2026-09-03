@@ -57,6 +57,7 @@ chrony
 # live DaygleVE system to disk. `xorg` pulls the X server + all video/input
 # drivers so it just works on real hardware and in VMs.
 xorg
+xinit
 openbox
 calamares
 calamares-settings-debian

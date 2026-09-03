@@ -9,7 +9,7 @@ repos. Because everything is pinned to immutable tags, a given
 Tags must be cut **in order**, because backend/frontend consume the schema by
 tag and the ISO consumes backend/frontend by tag.
 
-1. **Schema** — tag `DaygleVE-schema` at the release, e.g.:
+1. **Schema** - tag `DaygleVE-schema` at the release, e.g.:
    ```sh
    git -C DaygleVE-schema tag v1.0.0 && git -C DaygleVE-schema push origin v1.0.0
    ```
@@ -20,13 +20,13 @@ tag and the ISO consumes backend/frontend by tag.
    - Frontend `package.json`: `"@daygleve/schema": "github:daygle/DaygleVE-schema#v1.0.0"`
    Commit these, then continue.
 
-3. **Backend** — tag `DaygleVE-backend` `v1.0.0` and push. Its `Release`
+3. **Backend** - tag `DaygleVE-backend` `v1.0.0` and push. Its `Release`
    workflow builds `daygleve-backend-v1.0.0-x86_64-unknown-linux-gnu.tar.gz`.
 
-4. **Frontend** — tag `DaygleVE-frontend` `v1.0.0` and push. Its `Release`
+4. **Frontend** - tag `DaygleVE-frontend` `v1.0.0` and push. Its `Release`
    workflow builds `daygleve-frontend-v1.0.0.tar.gz` (the static site).
 
-5. **ISO** — set `DAYGLEVE_VERSION="v1.0.0"` in `versions.env`, commit, then
+5. **ISO** - set `DAYGLEVE_VERSION="v1.0.0"` in `versions.env`, commit, then
    tag this repo `v1.0.0` and push (or run the **Build ISO** workflow with the
    version input). The workflow fetches the backend + frontend assets and
    builds the ISO.
@@ -39,7 +39,7 @@ can read their releases and **no secret is required**.
 
 Only if you later make the app repos **private** do you need to set a secret:
 
-- `DAYGLEVE_ARTIFACTS_TOKEN` — a fine-grained PAT (or GitHub App token) with
+- `DAYGLEVE_ARTIFACTS_TOKEN` - a fine-grained PAT (or GitHub App token) with
   **Contents: read** on `DaygleVE-backend` and `DaygleVE-frontend`.
 
 The workflow uses that secret when present and otherwise falls back to
@@ -48,7 +48,7 @@ The workflow uses that secret when present and otherwise falls back to
 ## Building locally
 
 ```sh
-sudo apt-get install -y live-build xorriso debootstrap gh
+sudo apt-get install -y live-build xorriso debootstrap gh librsvg2-bin
 export GH_TOKEN=<token as above>
 ./build.sh          # -> daygleve-v1.0.0-amd64.iso
 ```
@@ -72,7 +72,7 @@ The image build runs on a privileged Linux runner (the CI workflow provides
 one); ZFS is built via DKMS against the shipped kernel. The live image boots
 into the **Calamares** graphical installer (a minimal openbox/X session
 auto-launches it), which installs the DaygleVE system to disk via
-calamares-settings-debian. CI only verifies the image builds — the installer
+calamares-settings-debian. CI only verifies the image builds - the installer
 flow itself is validated by booting the ISO. Remaining hardening: drop the
 backend from root to scoped capabilities, trim installer packages from the
 target, and re-enable the Debian security suite with the correct
@@ -82,13 +82,12 @@ target, and re-enable the Debian security suite with the correct
 
 DaygleVE branding replaces Debian's defaults on two surfaces:
 
-- **Boot menu** — `config/bootloaders/isolinux/splash.svg` (BIOS/syslinux) and
-  `config/bootloaders/grub-pc/splash.png` (UEFI/grub) replace the stock Debian
-  splash (the one that showed the Debian logo, "Debian GNU/Linux 13" and
-  live-build version numbers). A pre-rendered `splash.png` sits beside the
-  `.svg` so the branding survives even if the runner cannot rasterize SVG;
-  `librsvg2-bin` is installed in CI so live-build can regenerate it.
-- **Installer** — `config/includes.chroot/etc/calamares/branding/daygleve/`
+- **Boot menu** - `config/bootloaders/isolinux/splash.svg` (BIOS/syslinux) is
+  the single source for the branded background. The build regenerates the
+  `splash.png` files consumed by syslinux/GRUB, keeping the artwork below
+  GRUB's own heading so it cannot overlap. The build requires `rsvg-convert`
+  from `librsvg2-bin` so a stale raster image can never be baked into a new ISO.
+- **Installer** - `config/includes.chroot/etc/calamares/branding/daygleve/`
   is a Calamares branding component (`branding.desc` + `mark.svg`/`icon.svg`).
   The chroot hook repoints `/etc/calamares/settings.conf`
   (`branding: debian` → `branding: daygleve`) so the installer shows the

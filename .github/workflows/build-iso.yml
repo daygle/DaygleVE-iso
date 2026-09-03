@@ -37,7 +37,7 @@ jobs:
           # top-level dists/<suite>/Contents-<arch>.gz (removed; now per
           # component), so lb_chroot_linux-image 404s. Pull the latest
           # live-build .deb from Debian's pool and install it (it is
-          # Architecture: all — pure shell/make — so it runs fine on Ubuntu).
+          # Architecture: all - pure shell/make - so it runs fine on Ubuntu).
           LB_DEB=$(curl -fsSL https://deb.debian.org/debian/pool/main/l/live-build/ \
             | grep -oE 'live-build_[^"<]+_all\.deb' | sort -V | tail -1)
           test -n "$LB_DEB"
