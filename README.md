@@ -57,4 +57,6 @@ See [`docs/BUILD.md`](docs/BUILD.md) for the full release runbook.
 
 ## License
 
-Apache-2.0.
+Licensed under the [Apache License 2.0](LICENSE).
+
+See [SECURITY.md](SECURITY.md) for reporting security vulnerabilities.
