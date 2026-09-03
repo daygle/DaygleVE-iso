@@ -1,0 +1,22 @@
+#!/bin/sh
+set -eu
+
+# live-build generates these files after the bootloader stage. Keep the kernel,
+# initrd, and boot parameters intact while replacing only visible labels.
+for config_dir in isolinux boot/grub; do
+  [ -d "$config_dir" ] || continue
+  find "$config_dir" -type f -name '*.cfg' -exec sed -i \
+    -e 's/Live system (amd64 fail-safe mode)/DaygleVE (fail-safe mode)/g' \
+    -e 's/Live system (amd64)/DaygleVE/g' \
+    -e 's/Live (amd64 fail-safe mode)/DaygleVE (fail-safe mode)/g' \
+    -e 's/Live (amd64)/DaygleVE/g' \
+    -e 's/Debian GNU\/Linux - live (fail-safe mode)/DaygleVE (fail-safe mode)/g' \
+    -e 's/Debian GNU\/Linux - live/DaygleVE/g' \
+    -e 's/Utilities\.\.\./DaygleVE utilities.../g' \
+    {} +
+done
+
+# Keep the first menu row below the artwork on legacy BIOS/Syslinux boots.
+if [ -f isolinux/stdmenu.cfg ]; then
+  sed -i 's/^menu vshift 12$/menu vshift 16/' isolinux/stdmenu.cfg
+fi

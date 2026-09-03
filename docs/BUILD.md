@@ -84,8 +84,9 @@ DaygleVE branding replaces Debian's defaults on two surfaces:
 
 - **Boot menu** - `config/bootloaders/isolinux/splash.svg` (BIOS/syslinux) is
   the single source for the branded background. The build regenerates the
-  `splash.png` files consumed by syslinux/GRUB, keeping the artwork below
-  GRUB's own heading so it cannot overlap. The build requires `rsvg-convert`
+  `splash.png` files consumed by syslinux/GRUB, keeping the cube below GRUB's
+  heading and the generated menu band clear; the Syslinux menu is also shifted
+  down slightly during the binary stage. The build requires `rsvg-convert`
   from `librsvg2-bin` so a stale raster image can never be baked into a new ISO.
 - **Installer** - `config/includes.chroot/etc/calamares/branding/daygleve/`
   is a Calamares branding component (`branding.desc` + `mark.svg`/`icon.svg`).
@@ -94,5 +95,6 @@ DaygleVE branding replaces Debian's defaults on two surfaces:
   DaygleVE name, logo and palette, and names the installed bootloader entry
   "DaygleVE".
 
-The menu entry labels (e.g. "Live system (amd64)") still come from live-build's
-stock templates; relabeling them is a follow-up.
+The generated live entries are relabeled to "DaygleVE", "DaygleVE (fail-safe
+mode)", and "DaygleVE utilities..." during the binary build; kernel paths and
+boot parameters are left unchanged.
