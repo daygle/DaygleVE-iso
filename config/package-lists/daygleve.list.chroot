@@ -62,3 +62,8 @@ xinit
 openbox
 calamares
 calamares-settings-debian
+# xhost/xsetroot let the session paint the brand background and grant root
+# access to the user-owned X server; xterm surfaces the installer log on screen
+# if Calamares ever exits non-zero, instead of leaving a black display.
+x11-xserver-utils
+xterm
