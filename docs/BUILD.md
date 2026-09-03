@@ -1,8 +1,10 @@
 # DaygleVE release & ISO build runbook
 
 DaygleVE ships as a single ISO assembled from tagged releases of the three app
-repos. Because everything is pinned to immutable tags, a given
-`DAYGLEVE_VERSION` reproduces the same image.
+repos. The application artifacts are pinned to immutable tags, while the Debian
+base is selected by suite and mirror. A given `DAYGLEVE_VERSION` therefore
+reproduces the same application inputs, but not necessarily a bit-for-bit image
+unless the Debian archive is also pinned to a snapshot.
 
 ## Cutting a release (the coordinated tag dance)
 
@@ -72,11 +74,13 @@ The image build runs on a privileged Linux runner (the CI workflow provides
 one); ZFS is built via DKMS against the shipped kernel. The live image boots
 into the **Calamares** graphical installer (a live-only systemd service
 launches a minimal openbox/X session), which installs the DaygleVE system to disk
-via calamares-settings-debian. CI only verifies the image builds - the installer
-flow itself is validated by booting the ISO. Remaining hardening: drop the
-backend from root to scoped capabilities, trim installer packages from the
-target, and re-enable the Debian security suite with the correct
-`trixie-security` name.
+via calamares-settings-debian. The ISO carries generic and unsigned GRUB
+packages in its local package pool, allowing the bootloader step to work
+without reaching `deb.debian.org`; the ISO media must remain available during
+installation. CI only verifies that the image builds - the installer flow still
+requires testing by booting the ISO. Remaining hardening: drop the backend from
+root to scoped capabilities, trim installer packages from the target, and
+re-enable the Debian security suite with the correct `trixie-security` name.
 
 ## Branding
 
@@ -91,9 +95,11 @@ DaygleVE branding replaces Debian's defaults on two surfaces:
 - **Installer** - `config/includes.chroot/etc/calamares/branding/daygleve/`
   is a Calamares branding component (`branding.desc` + `mark.svg`/`icon.svg`).
   The chroot hook repoints `/etc/calamares/settings.conf`
-  (`branding: debian` → `branding: daygleve`) so the installer shows the
+  (`branding: debian` -> `branding: daygleve`) so the installer shows the
   DaygleVE name, logo and palette, and names the installed bootloader entry
-  "DaygleVE".
+  "DaygleVE". The generic and unsigned GRUB packages needed by Debian's
+  `bootloader-config` helper are staged by the two
+  `config/package-lists/*list.binary` files for offline installation.
 
 The generated live entries are relabeled to "DaygleVE", "DaygleVE (fail-safe
 mode)", and "DaygleVE utilities..." during the binary build; kernel paths and
