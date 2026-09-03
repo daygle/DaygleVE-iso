@@ -13,6 +13,18 @@ welcomeExpandingLogo: true
 windowExpanding: normal
 windowPlacement: center
 
+# Layout of the installer chrome (explicit values silence "setting is missing"
+# warnings and keep the classic left sidebar + bottom nav buttons).
+sidebar: widget
+navigation: widget
+
+# The slideshow shown in the installer panel while packages are copied.
+# Calamares treats a missing `slideshow` key as a FATAL error and refuses to
+# start (a black screen at boot), so this key is required. slideshowAPI: 2 is
+# the modern QML Presentation interface used by show.qml.
+slideshow: "show.qml"
+slideshowAPI: 2
+
 strings:
     productName:         "DaygleVE"
     shortProductName:    "DaygleVE"
