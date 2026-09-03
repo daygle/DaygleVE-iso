@@ -28,7 +28,7 @@ fi
 # xinit executes the user's .xinitrc as a program. Keep both the launcher and
 # the session script executable after live-build copies /etc/skel into the live
 # user's home directory.
-chmod 0755 /etc/skel/.bash_profile /etc/skel/.xinitrc
+chmod 0755 /etc/skel/.bash_profile /etc/skel/.profile /etc/skel/.xinitrc
 
 # Point Calamares at the DaygleVE branding component. calamares-settings-debian
 # ships settings.conf with `branding: debian`; repoint it to the DaygleVE
