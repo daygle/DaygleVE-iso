@@ -75,10 +75,14 @@ including the `operations/` journal. Mutating VM, container, storage, share,
 network and GPU workflows write a `running` record before touching the host and finalize
 it after the host action. On startup, records still marked `queued` or `running`
 are changed to `needs_review`, then a queued background `host.reconcile` scan
-inventories VMs, containers, datasets, bridges, shares and GPUs. Operators can
-also start that scan from `POST /api/v1/operations/reconcile` and poll its record
-at `GET /api/v1/operations/{id}` or use the Operations page. This is intentionally
-fail-closed: an unknown outcome is never presented as success.
+inventories VMs, containers, datasets, bridges, shares and GPUs and compares them
+to the persisted records. The scan reports drift findings — VMs/containers that
+exist in one but not the other, bridges present on the host but not recorded, or
+VLANs whose host configuration doesn't match the store — without auto-correcting.
+Operators can start the scan from `POST /api/v1/operations/reconcile` and poll its
+record at `GET /api/v1/operations/{id}` or use the Operations page.
+This is intentionally fail-closed: an unknown outcome is never presented as success
+and drift is flagged for inspection, not silently repaired.
 
 The systemd unit sets `UMask=0077` so state records are not world-readable. Keep
 `/var/lib/daygleve` on persistent storage and include it in appliance backup
