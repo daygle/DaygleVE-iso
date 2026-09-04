@@ -10,6 +10,9 @@ EnvironmentFile=/etc/daygleve/daygleve.env
 ExecStart=/usr/bin/daygleve-backend
 Restart=on-failure
 RestartSec=2
+# Operation records and user state contain control-plane metadata; create them
+# with restrictive permissions even though this service currently runs as root.
+UMask=0077
 # The backend drives KVM/QEMU, ZFS, LXC and host networking, so it runs
 # privileged. Tighten with dedicated capabilities once the host integration
 # lands (see the backend service-layer TODOs).

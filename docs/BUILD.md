@@ -68,6 +68,22 @@ resulting ISO does need virtualization.
   archive still moves within a suite; add `--apt-options`/snapshot pinning in
   `auto/config` if you need archive-level reproducibility.
 
+## Runtime state and crash recovery
+
+The installed service persists DaygleVE metadata under `/var/lib/daygleve`,
+including the `operations/` journal. Mutating VM, container, storage, share,
+network and GPU workflows write a `running` record before touching the host and finalize
+it after the host action. On startup, records still marked `queued` or `running`
+are changed to `needs_review`; operators can inspect them at
+`GET /api/v1/operations` or in the Operations page before deciding whether the
+host state should be reconciled manually. This is intentionally fail-closed: an
+unknown outcome is never presented as success.
+
+The systemd unit sets `UMask=0077` so state records are not world-readable. Keep
+`/var/lib/daygleve` on persistent storage and include it in appliance backup
+plans; the journal is audit/recovery metadata, not a replacement for VM or ZFS
+backups.
+
 ## Status
 
 The image build runs on a privileged Linux runner (the CI workflow provides
