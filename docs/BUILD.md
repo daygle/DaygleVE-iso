@@ -74,10 +74,11 @@ The installed service persists DaygleVE metadata under `/var/lib/daygleve`,
 including the `operations/` journal. Mutating VM, container, storage, share,
 network and GPU workflows write a `running` record before touching the host and finalize
 it after the host action. On startup, records still marked `queued` or `running`
-are changed to `needs_review`; operators can inspect them at
-`GET /api/v1/operations` or in the Operations page before deciding whether the
-host state should be reconciled manually. This is intentionally fail-closed: an
-unknown outcome is never presented as success.
+are changed to `needs_review`, then a queued background `host.reconcile` scan
+inventories VMs, containers, datasets, bridges, shares and GPUs. Operators can
+also start that scan from `POST /api/v1/operations/reconcile` and poll its record
+at `GET /api/v1/operations/{id}` or use the Operations page. This is intentionally
+fail-closed: an unknown outcome is never presented as success.
 
 The systemd unit sets `UMask=0077` so state records are not world-readable. Keep
 `/var/lib/daygleve` on persistent storage and include it in appliance backup
