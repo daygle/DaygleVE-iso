@@ -30,7 +30,9 @@ trap 'rm -rf "$STAGE"' EXIT
 # asset is selected, so the build is deterministic and never trips over a
 # stray same-prefixed asset.
 BACKEND_ASSET="daygleve-backend-${DAYGLEVE_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
+BACKEND_CHECKSUM="daygleve-backend-${DAYGLEVE_VERSION}.sha256"
 FRONTEND_ASSET="daygleve-frontend-${DAYGLEVE_VERSION}.tar.gz"
+FRONTEND_CHECKSUM="daygleve-frontend-${DAYGLEVE_VERSION}.sha256"
 
 echo ">> DaygleVE ${DAYGLEVE_VERSION}"
 echo ">> backend:  ${BACKEND_REPO} (${BACKEND_ASSET})"
@@ -41,7 +43,12 @@ echo ">> fetching backend binary…"
 gh release download "$DAYGLEVE_VERSION" \
   --repo "$BACKEND_REPO" \
   --pattern "$BACKEND_ASSET" \
+  --pattern "$BACKEND_CHECKSUM" \
   --dir "$STAGE"
+(
+  cd "$STAGE"
+  sha256sum --check "$BACKEND_CHECKSUM"
+)
 tar -xzf "$STAGE/$BACKEND_ASSET" -C "$STAGE"
 install -Dm0755 "$STAGE/daygleve-backend" "$BIN_DEST"
 echo "   -> $BIN_DEST"
@@ -51,7 +58,12 @@ echo ">> fetching frontend site…"
 gh release download "$DAYGLEVE_VERSION" \
   --repo "$FRONTEND_REPO" \
   --pattern "$FRONTEND_ASSET" \
+  --pattern "$FRONTEND_CHECKSUM" \
   --dir "$STAGE"
+(
+  cd "$STAGE"
+  sha256sum --check "$FRONTEND_CHECKSUM"
+)
 # Recreate the web root from scratch so nothing from a previous build (dotfiles
 # included) is baked into the image. The directory is untracked and created
 # here on demand.
