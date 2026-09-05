@@ -4,6 +4,7 @@
 set -e
 
 # The DaygleVE control plane (API + web UI).
+systemctl enable daygleve-broker.service
 systemctl enable daygleve-backend.service
 systemctl enable daygleve-prepare-state.service
 systemctl enable daygleve-live-session.service
@@ -27,20 +28,21 @@ if ! getent group daygleve >/dev/null; then
   groupadd --system daygleve
 fi
 if ! id daygleve >/dev/null 2>&1; then
-  useradd --system --gid daygleve --home-dir /var/lib/daygleve \
+  useradd --system --uid 995 --gid daygleve --home-dir /var/lib/daygleve \
     --shell /usr/sbin/nologin --no-create-home daygleve
 fi
-for group in libvirt kvm lxc netdev video render disk; do
-  getent group "$group" >/dev/null || groupadd --system "$group"
-  usermod --append --groups "$group" daygleve
- done
+# The backend no longer needs host-operation groups; the broker owns that
+# boundary. Keep only the service group so it can access the mode-0660 socket.
+
 install -d -o daygleve -g daygleve -m 0700 /var/lib/daygleve
 
-# Ensure the backend binary is executable (permissions can be lost via
-# includes.chroot copying).
-if [ -f /usr/bin/daygleve-backend ]; then
-  chmod 0755 /usr/bin/daygleve-backend
-fi
+# Ensure both control-plane binaries are executable (permissions can be lost
+# via includes.chroot copying).
+for binary in /usr/bin/daygleve-backend /usr/bin/daygleve-broker; do
+  if [ -f "$binary" ]; then
+    chmod 0755 "$binary"
+  fi
+done
 
 # Prepare-state scripts and sudoers drop-ins have strict modes.
 chmod 0755 /usr/local/sbin/daygleve-prepare-state
@@ -91,8 +93,12 @@ EOF
 # first boot once the kernel security module is available; a missing AppArmor
 # feature must be visible in the journal rather than silently weakening the
 # service unit.
-if command -v apparmor_parser >/dev/null 2>&1 && [ -f /etc/apparmor.d/usr.bin.daygleve-backend ]; then
-  apparmor_parser -r /etc/apparmor.d/usr.bin.daygleve-backend || true
+if command -v apparmor_parser >/dev/null 2>&1; then
+  for profile in /etc/apparmor.d/usr.bin.daygleve-backend /etc/apparmor.d/usr.bin.daygleve-broker; do
+    if [ -f "$profile" ]; then
+      apparmor_parser -r "$profile" || true
+    fi
+  done
 fi
 
 # The live user (created by live-config) runs the graphical installer through

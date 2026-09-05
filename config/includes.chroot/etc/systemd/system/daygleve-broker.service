@@ -1,0 +1,48 @@
+[Unit]
+Description=DaygleVE privileged host-operation broker
+Documentation=https://github.com/daygle/DaygleVE-backend https://github.com/daygle/DaygleVE-iso/blob/main/docs/SECURITY-HARDENING.md
+Before=daygleve-backend.service
+After=local-fs.target daygleve-prepare-state.service
+Requires=daygleve-prepare-state.service
+
+[Service]
+Type=exec
+User=root
+Group=daygleve
+EnvironmentFile=-/etc/daygleve/daygleve.env
+Environment=DAYGLEVE_BROKER_SOCKET=/run/daygleve/broker.sock
+Environment=DAYGLEVE_BROKER_UID=995
+ExecStart=/usr/bin/daygleve-broker
+Restart=on-failure
+RestartSec=2
+UMask=0007
+RuntimeDirectory=daygleve
+RuntimeDirectoryMode=0750
+
+# The broker is the only process allowed to hold the host-operation privilege.
+# Keep the set explicit; the exact operations are independently constrained by
+# the broker protocol and its fixed executable/path allowlists.
+CapabilityBoundingSet=CAP_CHOWN CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_FOWNER CAP_NET_ADMIN CAP_SYS_ADMIN CAP_SYS_RAWIO
+AmbientCapabilities=
+NoNewPrivileges=false
+ProtectHome=read-only
+PrivateTmp=true
+PrivateDevices=false
+ProtectKernelTunables=false
+ProtectKernelModules=false
+ProtectKernelLogs=true
+ProtectControlGroups=false
+ProtectClock=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+IPAddressDeny=169.254.169.254
+ReadWritePaths=/run/daygleve /var/lib/daygleve /var/lib/lxc /sys/bus/pci/devices /sys/bus/pci/drivers/vfio-pci /sys/class/net
+ReadOnlyPaths=/etc /usr /bin /sbin /lib /lib64 /proc /sys
+SystemCallFilter=@system-service @file-system @network-io @process @mount
+SystemCallFilter=~@reboot @swap
+SystemCallErrorNumber=EPERM
+
+[Install]
+WantedBy=multi-user.target

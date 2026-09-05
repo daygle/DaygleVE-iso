@@ -1,15 +1,14 @@
 [Unit]
 Description=DaygleVE hypervisor control API and web UI
 Documentation=https://github.com/daygle/DaygleVE-backend https://github.com/daygle/DaygleVE-iso/blob/main/docs/SECURITY-HARDENING.md
-Requires=daygleve-prepare-state.service
-After=network-online.target libvirtd.service zfs-mount.service daygleve-prepare-state.service
+Requires=daygleve-prepare-state.service daygleve-broker.service
+After=network-online.target libvirtd.service zfs-mount.service daygleve-prepare-state.service daygleve-broker.service
 Wants=network-online.target
 
 [Service]
 Type=exec
 User=daygleve
 Group=daygleve
-SupplementaryGroups=libvirt kvm lxc netdev video render disk
 EnvironmentFile=/etc/daygleve/daygleve.env
 ExecStart=/usr/bin/daygleve-backend
 Restart=on-failure
@@ -18,8 +17,10 @@ UMask=0077
 
 # The service account owns only DaygleVE state and is granted the groups needed
 # for the current libvirt/LXC/ZFS/network/GPU integration. It has no sudo rule.
-CapabilityBoundingSet=CAP_NET_ADMIN CAP_SYS_ADMIN CAP_SYS_RAWIO
-AmbientCapabilities=CAP_NET_ADMIN CAP_SYS_ADMIN CAP_SYS_RAWIO
+# The broker owns the privileged host boundary. The API retains no ambient
+# capabilities and cannot bypass the broker when DAYGLEVE_BROKER_SOCKET is set.
+CapabilityBoundingSet=
+AmbientCapabilities=
 NoNewPrivileges=true
 
 # The backend needs its own state, the local ISO/backup tree, LXC metadata, and
@@ -29,7 +30,7 @@ ProtectSystem=strict
 ProtectHome=read-only
 PrivateTmp=true
 PrivateDevices=false
-ReadWritePaths=/var/lib/daygleve /var/lib/lxc /sys/bus/pci/devices /sys/bus/pci/drivers/vfio-pci /sys/class/net
+ReadWritePaths=/var/lib/daygleve
 ReadOnlyPaths=/sys /proc /dev
 
 # Keep kernel and control-plane surfaces read-only where possible. LXC needs to
@@ -56,9 +57,8 @@ SystemCallFilter=@system-service @file-system @network-io @process @mount
 SystemCallFilter=~@reboot @swap
 SystemCallErrorNumber=EPERM
 
-DeviceAllow=/dev/kvm rw
-DeviceAllow=/dev/vfio/* rw
-DeviceAllow=/dev/zvol/* rw
+# No direct host devices: passthrough, KVM, and zvol access belongs to the broker.
+DevicePolicy=closed
 
 [Install]
 WantedBy=multi-user.target

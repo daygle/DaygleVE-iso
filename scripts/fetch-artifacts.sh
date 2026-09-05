@@ -21,6 +21,7 @@ fi
 
 INCLUDE="$ROOT/config/includes.chroot"
 BIN_DEST="$INCLUDE/usr/bin/daygleve-backend"
+BROKER_DEST="$INCLUDE/usr/bin/daygleve-broker"
 WEB_DEST="$INCLUDE/usr/share/daygleve/web"
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
@@ -51,7 +52,9 @@ gh release download "$DAYGLEVE_VERSION" \
 )
 tar -xzf "$STAGE/$BACKEND_ASSET" -C "$STAGE"
 install -Dm0755 "$STAGE/daygleve-backend" "$BIN_DEST"
+install -Dm0755 "$STAGE/daygleve-broker" "$BROKER_DEST"
 echo "   -> $BIN_DEST"
+echo "   -> $BROKER_DEST"
 
 # --- frontend static site -------------------------------------------------
 echo ">> fetching frontend site…"

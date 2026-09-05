@@ -1,57 +1,29 @@
 #include <tunables/global>
 
-# AppArmor policy for the DaygleVE control plane. This profile follows the
-# direct-command architecture: it permits only the fixed host tools selected by
-# the backend command allowlist, the DaygleVE state tree, and the host kernel
-# interfaces required by libvirt/LXC/ZFS/network/GPU management.
+# AppArmor policy for the unprivileged DaygleVE API. Privileged host tools,
+# devices, sysfs writes, and mount operations belong exclusively to the
+# root-owned daygleve-broker profile.
 /usr/bin/daygleve-backend flags=(attach_disconnected) {
   #include <abstractions/base>
   #include <abstractions/nameservice>
   #include <abstractions/ssl_certs>
-
-  capability chown,
-  capability dac_override,
-  capability dac_read_search,
-  capability fowner,
-  capability net_admin,
-  capability sys_admin,
-  capability sys_rawio,
 
   network unix stream,
   network inet stream,
   network inet6 stream,
 
   /usr/bin/daygleve-backend mr,
-  /usr/sbin/ip ix,
-  /usr/sbin/bridge ix,
-  /usr/bin/virsh ix,
-  /usr/bin/lxc-* ix,
-  /usr/bin/mount ix,
-  /usr/bin/umount ix,
-  /usr/sbin/zfs ix,
-  /usr/sbin/zpool ix,
 
   /var/lib/daygleve/ rw,
   /var/lib/daygleve/** rwk,
-  /var/lib/lxc/ r,
-  /var/lib/lxc/** rwk,
-  /run/libvirt/ r,
-  /run/libvirt/** rw,
-  /etc/libvirt/ r,
-  /etc/libvirt/** r,
-  /etc/mtab r,
+  /usr/share/daygleve/web/ r,
+  /usr/share/daygleve/web/** r,
+  /etc/daygleve/daygleve.env r,
   /etc/hosts r,
   /etc/resolv.conf r,
+  /etc/ssl/** r,
+  /run/daygleve/broker.sock rw,
+  /run/systemd/resolve/stub-resolv.conf r,
   /proc/ r,
   /proc/** r,
-  /sys/ r,
-  /sys/** r,
-  /sys/bus/pci/devices/**/driver/unbind w,
-  /sys/bus/pci/devices/**/driver_override w,
-  /sys/bus/pci/drivers/vfio-pci/bind w,
-  /sys/class/net/** r,
-  /dev/kvm rw,
-  /dev/vfio/** rw,
-  /dev/zvol/** rw,
-  /tmp/** rwk,
 }

@@ -1,0 +1,59 @@
+#include <tunables/global>
+
+# The broker is privileged by design, so its AppArmor policy is intentionally
+# narrower than the backend policy. Production validation must load this
+# profile enforceably on a host with AppArmor enabled; no silent fallback is
+# acceptable if the profile cannot be loaded.
+/usr/bin/daygleve-broker flags=(attach_disconnected) {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+  #include <abstractions/ssl_certs>
+
+  capability chown,
+  capability dac_override,
+  capability dac_read_search,
+  capability fowner,
+  capability net_admin,
+  capability sys_admin,
+  capability sys_rawio,
+
+  network unix stream,
+  network inet stream,
+  network inet6 stream,
+
+  /usr/bin/daygleve-broker mr,
+  /usr/sbin/ip ix,
+  /usr/sbin/bridge ix,
+  /usr/bin/virsh ix,
+  /usr/bin/lxc-* ix,
+  /usr/bin/mount ix,
+  /usr/bin/umount ix,
+  /usr/sbin/zfs ix,
+  /usr/sbin/zpool ix,
+
+  /run/daygleve/ rw,
+  /run/daygleve/** rwk,
+  /var/lib/daygleve/ rw,
+  /var/lib/daygleve/** rwk,
+  /var/lib/lxc/ r,
+  /var/lib/lxc/** rwk,
+  /run/libvirt/ r,
+  /run/libvirt/** rw,
+  /etc/libvirt/ r,
+  /etc/libvirt/** r,
+  /etc/mtab r,
+  /etc/hosts r,
+  /etc/resolv.conf r,
+  /proc/ r,
+  /proc/** r,
+  /sys/ r,
+  /sys/** r,
+  /sys/bus/pci/devices/**/driver/unbind w,
+  /sys/bus/pci/devices/**/driver_override w,
+  /sys/bus/pci/drivers/vfio-pci/bind w,
+  /sys/class/net/** r,
+  /dev/kvm rw,
+  /dev/vfio/** rw,
+  /dev/zvol/** rw,
+  /tmp/** rwk,
+}
