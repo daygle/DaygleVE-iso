@@ -59,19 +59,73 @@ If AppArmor is unavailable in a custom kernel, treat the host as not meeting
 the appliance security baseline. Do not disable the systemd sandbox to work
 around a denied operation; add a reviewed rule or implement the broker split.
 
+### Real-host validation still required
+
+The sandbox and MAC controls cannot be fully verified on this development
+workstation. Before treating the appliance as production hardened, exercise
+the full stack on a disposable Linux host and confirm:
+
+- `systemctl show daygleve-backend` reports `User=daygleve` and the expected
+  capability, device, syscall, and filesystem restrictions;
+- `daygleve` cannot obtain a login shell, run `sudo`, or read unrelated secrets
+  under `/root`, `/home`, and `/etc/shadow`;
+- VM, LXC, ZFS, bridge/VLAN, share, backup, and GPU workflows all complete and
+  produce no unexpected AppArmor denials or systemd audit messages;
+- the command wrapper is the only path through which host tools are invoked, and
+  no new tool has been added without an explicit allowlist entry;
+- the broker split is implemented before untrusted tenants or the public internet
+  are given access to the control plane.
+
+If any of these validations fail, treat the appliance as **not** production-ready
+for the affected workload and do not disable the sandbox or profile to work around
+the failure.
+
+Last revised: 2026-09-05.
+
 ## Command execution boundary
 
-The backend command wrapper now:
+The backend command wrapper constrains *how* host commands launch: it allows only
+the known host programs (`virsh`, `zfs`, `zpool`, `lxc-*`, `ip`, `bridge`,
+`mount`, and `umount`), resolves each program to an absolute appliance path rather
+than searching `PATH`, clears the inherited environment, retains only a fixed `PATH`
+and `LC_ALL=C`, and applies timeouts.
 
-1. allows only the known host programs (`virsh`, `zfs`, `zpool`, `lxc-*`,
-   `ip`, `bridge`, `mount`, and `umount`);
-2. resolves each program to an absolute appliance path rather than searching
-   `PATH`; and
-3. clears the inherited environment, retaining only a fixed `PATH` and
-   `LC_ALL=C`.
+That removes PATH/loader/shell-based control surfaces for the current
+architecture, but it does **not** remove the privilege boundary. The backend still
+runs with the capability and device access required to invoke libvirt, ZFS, LXC,
+PCI sysfs, and networking/mount tooling.
 
-Arguments remain argv elements and are validated by each service before use;
-there is no shell interpolation.
+Arguments remain argv elements and are validated by each service before use; there
+is no shell interpolation. The split between *command safety* and *privilege
+separation* is documented in the backend service layer: the current direct path is
+explicit, not implicit.
+
+### Residual privilege surface
+
+The following host actions are still performed directly by the backend and remain on
+the broker split list:
+
+- libvirt system instance: VM define/start/destroy/undefine, nvram, console VNC,
+  and live state queries via `virsh` under `qemu:///system`
+- ZFS: dataset/snapshot/zvol mutation, send/receive during backup/restore,
+  volume provisioning, and retention deletes
+- LXC: container create/start/stop/destroy, cgroup limit writes, and config
+  mutation with ZFS-backed rootfs writes
+- GPU/vfio: PCI sysfs bind/unbind and driver overrides that can rebind an IOMMU
+  group to `vfio-pci`
+- Network: bridge/VLAN creation and modifications via `ip`/`bridge`, including
+  namespace and cgroup usage by containers
+- Shares/mounts: `mount`/`umount` for network shares and mount table mutation
+- Backup/restore: long-running ZFS send/receive and restore target replacement
+
+Lower-risk read-heavy or state-local concerns are not broker blockers today:
+JSON record stores, auth/password state, ISO/library enumeration, metrics, the
+operations journal, and API housekeeping.
+
+The next hardening milestone should move these operations into a small,
+root-owned broker with a narrow authenticated local protocol. Until that broker is
+deployed, the service-layer documentation explicitly treats the current
+implementation as temporary.
 
 ## Operational checklist
 
