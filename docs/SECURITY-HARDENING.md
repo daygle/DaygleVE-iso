@@ -26,12 +26,11 @@ should hold the following privileges:
 The root-only preparation unit performs state migration, so the API does not
 retain `CAP_CHOWN`, `CAP_DAC_OVERRIDE`, `CAP_DAC_READ_SEARCH`, or `CAP_FOWNER`.
 These are deliberately absent from the service capability bounding set.
-`CAP_SYS_ADMIN` and direct PCI sysfs writes are high-risk and are not equivalent
-to a complete least-privilege design. The next security milestone should split
-LXC, mount, ZFS mutation, networking, and vfio operations into a small,
-root-owned broker with a narrow authenticated local protocol. Until that split
-is deployed, the systemd and AppArmor controls below reduce but do not remove
-the impact of a backend compromise.
+The broker still has a concentrated root-equivalent surface by design. It is
+therefore a separate trust boundary, not a claim that arbitrary host operations
+are safe: the protocol allowlist, fixed paths, systemd policy, AppArmor profile,
+and real-host validation below are all required. The backend must never receive
+the broker's capabilities or socket group outside the documented service path.
 
 ## Service sandbox
 
@@ -101,10 +100,11 @@ the known host programs (`virsh`, `zfs`, `zpool`, `lxc-*`, `ip`, `bridge`,
 than searching `PATH`, clears the inherited environment, retains only a fixed `PATH`
 and `LC_ALL=C`, and applies timeouts.
 
-That removes PATH/loader/shell-based control surfaces for the current
-architecture, but it does **not** remove the privilege boundary. The backend still
-runs with the capability and device access required to invoke libvirt, ZFS, LXC,
-PCI sysfs, and networking/mount tooling.
+That removes PATH/loader/shell-based control surfaces. On the appliance the
+backend does not receive the capabilities or device access required for those
+operations; it sends validated requests to the broker. The broker remains a
+concentrated root-equivalent boundary and must be treated as a separate trusted
+component.
 
 Arguments remain argv elements and are validated by each service before use; there
 is no shell interpolation. The split between *command safety* and *privilege separation* is documented in the backend service layer: the development direct fallback is explicit and the appliance path is broker-mediated.

@@ -1,0 +1,24 @@
+name: Validate installed host
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: "Optional DaygleVE API base URL for broker posture validation"
+        required: false
+        type: string
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    # This job must run on the disposable Linux appliance host, not a GitHub
+    # hosted runner. Do not attach production nodes to this label.
+    runs-on: [self-hosted, linux, daygleve-validation]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate broker and service boundary
+        env:
+          DAYGLEVE_API_URL: ${{ inputs.api_url }}
+          DAYGLEVE_API_TOKEN: ${{ secrets.DAYGLEVE_VALIDATION_API_TOKEN }}
+        run: sudo --preserve-env=DAYGLEVE_API_URL,DAYGLEVE_API_TOKEN bash scripts/validate-host.sh
