@@ -1,10 +1,11 @@
 #!/bin/sh
-# Runs inside the image chroot during `lb build`: enable the services that
-# make the box a DaygleVE node on first boot.
+# Runs inside the image chroot during `lb build`: enable services and create
+# the least-privileged runtime account used by the DaygleVE API.
 set -e
 
 # The DaygleVE control plane (API + web UI).
 systemctl enable daygleve-backend.service
+systemctl enable daygleve-prepare-state.service
 systemctl enable daygleve-live-session.service
 
 # Virtualization / container / storage daemons.
@@ -19,16 +20,35 @@ systemctl enable ssh.service || true
 # never blocks generating the machine-id / entropy seed on a low-entropy VM.
 systemctl enable haveged.service || true
 
+# The backend no longer runs as root. Create a system account with no login
+# shell, no password, and only the groups required by the current host-tool
+# integration. The helper unit remains root-owned and exits before the backend.
+if ! getent group daygleve >/dev/null; then
+  groupadd --system daygleve
+fi
+if ! id daygleve >/dev/null 2>&1; then
+  useradd --system --gid daygleve --home-dir /var/lib/daygleve \
+    --shell /usr/sbin/nologin --no-create-home daygleve
+fi
+for group in libvirt kvm lxc netdev video render disk; do
+  getent group "$group" >/dev/null || groupadd --system "$group"
+  usermod --append --groups "$group" daygleve
+ done
+install -d -o daygleve -g daygleve -m 0700 /var/lib/daygleve
+
 # Ensure the backend binary is executable (permissions can be lost via
 # includes.chroot copying).
 if [ -f /usr/bin/daygleve-backend ]; then
   chmod 0755 /usr/bin/daygleve-backend
 fi
 
-# sudoers drop-ins must be mode 0440, or sudo refuses to read them.
-if [ -f /etc/sudoers.d/daygleve-installer ]; then
-  chmod 0440 /etc/sudoers.d/daygleve-installer
-fi
+# Prepare-state scripts and sudoers drop-ins have strict modes.
+chmod 0755 /usr/local/sbin/daygleve-prepare-state
+for file in /etc/sudoers.d/daygleve-installer /etc/sudoers.d/daygleve-backend; do
+  if [ -f "$file" ]; then
+    chmod 0440 "$file"
+  fi
+done
 
 # Keep the live-session launcher and xinit script executable after live-build
 # copies the files into the live user's home directory.
@@ -66,6 +86,14 @@ dbus-symlink: true
 entropy-copy: false
 entropy: false
 EOF
+
+# Prepare AppArmor policy, if the package is present. The profile is loaded on
+# first boot once the kernel security module is available; a missing AppArmor
+# feature must be visible in the journal rather than silently weakening the
+# service unit.
+if command -v apparmor_parser >/dev/null 2>&1 && [ -f /etc/apparmor.d/usr.bin.daygleve-backend ]; then
+  apparmor_parser -r /etc/apparmor.d/usr.bin.daygleve-backend || true
+fi
 
 # The live user (created by live-config) runs the graphical installer through
 # daygleve-live-session.service on tty1. The default systemd target stays

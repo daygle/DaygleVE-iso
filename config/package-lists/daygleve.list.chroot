@@ -42,6 +42,11 @@ iproute2
 ifupdown2
 vlan
 
+# --- Security / mandatory access control ---
+apparmor
+apparmor-profiles
+apparmor-utils
+
 # --- Base utilities / management ---
 openssh-server
 ca-certificates

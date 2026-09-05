@@ -1,0 +1,8 @@
+# DaygleVE backend runtime hardening
+#
+# The API process runs as the dedicated `daygleve` account. It is intentionally
+# granted only the groups required by the current direct host-tool architecture;
+# the API does not receive an unrestricted sudo rule. The preparation unit runs
+# once as root to create/migrate the state directory and then exits.
+
+Defaults:daygleve !setenv

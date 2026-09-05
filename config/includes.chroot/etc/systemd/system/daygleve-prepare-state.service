@@ -1,0 +1,12 @@
+[Unit]
+Description=Prepare DaygleVE service state
+Before=daygleve-backend.service
+ConditionPathExists=/usr/local/sbin/daygleve-prepare-state
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/daygleve-prepare-state
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

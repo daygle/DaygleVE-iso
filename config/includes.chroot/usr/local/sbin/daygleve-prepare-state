@@ -1,0 +1,34 @@
+#!/bin/sh
+# Prepare persistent directories for the unprivileged DaygleVE API service.
+set -eu
+
+install -d -o daygleve -g daygleve -m 0700 \
+  /var/lib/daygleve \
+  /var/lib/daygleve/backup_artifacts \
+  /var/lib/daygleve/backup_plans \
+  /var/lib/daygleve/backups \
+  /var/lib/daygleve/bridges \
+  /var/lib/daygleve/container_snapshots \
+  /var/lib/daygleve/containers \
+  /var/lib/daygleve/isos \
+  /var/lib/daygleve/mounts \
+  /var/lib/daygleve/operations \
+  /var/lib/daygleve/shares \
+  /var/lib/daygleve/tmp \
+  /var/lib/daygleve/users \
+  /var/lib/daygleve/vms \
+  /var/lib/daygleve/vlans
+
+# Existing records may have been created by an older root-running release.
+# Transfer only DaygleVE's own state tree; never recursively alter host guest
+# root filesystems or arbitrary administrator-selected paths.
+chown -R daygleve:daygleve /var/lib/daygleve
+chmod 0700 /var/lib/daygleve
+
+# The direct-command backend needs to read/write LXC metadata. Keep the
+# container tree private to root and the DaygleVE service account. Container
+# rootfs data remains owned by the host/container tooling.
+if [ -d /var/lib/lxc ]; then
+  chown root:daygleve /var/lib/lxc
+  chmod 0750 /var/lib/lxc
+fi

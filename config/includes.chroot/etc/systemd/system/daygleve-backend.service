@@ -1,24 +1,64 @@
 [Unit]
 Description=DaygleVE hypervisor control API and web UI
-Documentation=https://github.com/daygle/DaygleVE-backend https://github.com/daygle/DaygleVE-iso/blob/main/docs/BACKUP-RESTORE.md
-After=network-online.target libvirtd.service
+Documentation=https://github.com/daygle/DaygleVE-backend https://github.com/daygle/DaygleVE-iso/blob/main/docs/SECURITY-HARDENING.md
+Requires=daygleve-prepare-state.service
+After=network-online.target libvirtd.service zfs-mount.service daygleve-prepare-state.service
 Wants=network-online.target
 
 [Service]
 Type=exec
+User=daygleve
+Group=daygleve
+SupplementaryGroups=libvirt kvm lxc netdev video render disk
 EnvironmentFile=/etc/daygleve/daygleve.env
 ExecStart=/usr/bin/daygleve-backend
 Restart=on-failure
 RestartSec=2
-# Operation records, backup manifests and credentials contain control-plane
-# metadata; create them with restrictive permissions.
 UMask=0077
-# Backup streams and manifests are private node data.
-ReadWritePaths=/var/lib/daygleve
-# The backend currently needs host control for libvirt, ZFS, LXC, networking,
-# and device passthrough. Keep this explicit until a helper split permits
-# dropping the API process to a dedicated unprivileged account.
-User=root
+
+# The service account owns only DaygleVE state and is granted the groups needed
+# for the current libvirt/LXC/ZFS/network/GPU integration. It has no sudo rule.
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_SYS_ADMIN CAP_SYS_RAWIO
+AmbientCapabilities=CAP_NET_ADMIN CAP_SYS_ADMIN CAP_SYS_RAWIO
+NoNewPrivileges=true
+
+# The backend needs its own state, the local ISO/backup tree, LXC metadata, and
+# the explicitly delegated PCI/network sysfs paths. All other host filesystems
+# remain read-only or hidden.
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+PrivateDevices=false
+ReadWritePaths=/var/lib/daygleve /var/lib/lxc /sys/bus/pci/devices /sys/bus/pci/drivers/vfio-pci /sys/class/net
+ReadOnlyPaths=/sys /proc /dev
+
+# Keep kernel and control-plane surfaces read-only where possible. LXC needs to
+# create namespaces and manage cgroups, so those two controls remain available;
+# they must eventually move into a root-owned helper service for a full split.
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=false
+ProtectClock=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+
+# Only the families required for API traffic, libvirt sockets, mounts, and
+# host-tool networking are available. Metadata-service access is denied.
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+IPAddressDeny=169.254.169.254
+
+# Permit normal service, filesystem, network, process, and mount operations;
+# explicitly block reboot and swap syscalls. This is intentionally compatible
+# with LXC's namespace/mount workflow.
+SystemCallFilter=@system-service @file-system @network-io @process @mount
+SystemCallFilter=~@reboot @swap
+SystemCallErrorNumber=EPERM
+
+DeviceAllow=/dev/kvm rw
+DeviceAllow=/dev/vfio/* rw
+DeviceAllow=/dev/zvol/* rw
 
 [Install]
 WantedBy=multi-user.target
