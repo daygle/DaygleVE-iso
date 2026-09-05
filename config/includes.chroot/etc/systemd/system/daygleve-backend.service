@@ -1,6 +1,6 @@
 [Unit]
 Description=DaygleVE hypervisor control API and web UI
-Documentation=https://github.com/daygle/DaygleVE-backend
+Documentation=https://github.com/daygle/DaygleVE-backend https://github.com/daygle/DaygleVE-iso/blob/main/docs/BACKUP-RESTORE.md
 After=network-online.target libvirtd.service
 Wants=network-online.target
 
@@ -10,12 +10,14 @@ EnvironmentFile=/etc/daygleve/daygleve.env
 ExecStart=/usr/bin/daygleve-backend
 Restart=on-failure
 RestartSec=2
-# Operation records and user state contain control-plane metadata; create them
-# with restrictive permissions even though this service currently runs as root.
+# Operation records, backup manifests and credentials contain control-plane
+# metadata; create them with restrictive permissions.
 UMask=0077
-# The backend drives KVM/QEMU, ZFS, LXC and host networking, so it runs
-# privileged. Tighten with dedicated capabilities once the host integration
-# lands (see the backend service-layer TODOs).
+# Backup streams and manifests are private node data.
+ReadWritePaths=/var/lib/daygleve
+# The backend currently needs host control for libvirt, ZFS, LXC, networking,
+# and device passthrough. Keep this explicit until a helper split permits
+# dropping the API process to a dedicated unprivileged account.
 User=root
 
 [Install]
